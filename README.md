@@ -1,22 +1,28 @@
-## Jenkins Annotator [![Build Status](http://ci.shonm.com/job/ShonM_jenkins-annotator/badge/icon)](http://ci.shonm.com/job/ShonM_jenkins-annotator/)
+## Jenkins Annotator
 
 Inspired by [the original jenkins-commentator by KnpLabs](https://github.com/KnpLabs/jenkins-commentator)
 
-This spin-off is written in PHP using React and Symfony/Console just because.
+### Installation
+ 1. Put jenkins-annotator behind anything that can run PHP. Nginx, apache, or the built-in server are all good options.
+ 2. Install the Github Pull Request Builder
+ 3. Install the Groovy Postbuild plugin
+ 4. Add the following Groovy Postbuild script to your project
+ 5. Make sure you change the user, repo, token, and annotator locations!
 
-Configure your job to call this post-build:
 
 ```
-curl --data-urlencode out@${WORKSPACE}/result.testdox "localhost:8090\
-?jenkins=$JENKINS_URL
-&user=ShonM\
-&repo=jenkins-annotator\
-&sha=$GIT_COMMIT\
-&status=$BUILD_STATUS\
-&project=$JOB_NAME\
-&job=$BUILD_NUMBER"
+// Definitely modify these
+def user = "user"
+def repo = "repository"
+def token = "access token"
+def annotator = "127.0.0.1:9400"
+
+// Don't touch these
+def env = manager.build.getEnvironment(manager.listener)
+def url = env['BUILD_URL']
+def sha = env['ghprbActualCommit']
+def workspace = env['WORKSPACE']
+
+// Hit annotator
+"curl ${annotator}/${user}/${repo}/${sha} --data 'url=${url}&status=${manager.build.result}&token=${token}' --data-urlencode 'out@${workspace}/test'".execute()
 ```
-
-What's happening is the contents of the file `${WORKSPACE}/result.testdox` is sent upstream as the "out" variable. The content of this file can be anything you want Annotator to comment on the pull request with. One example would be PHPUnit's --testdox output, which is a human-readable version of its regular output. The choice is yours.
-
-With the EnvInject Plugin, under Build > Inject environment variables > Properties Content, pass: `BUILD_STATUS=success`
