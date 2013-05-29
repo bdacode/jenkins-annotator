@@ -1,0 +1,5 @@
+vendor/
+bin/phpunit
+tests/coverage
+tests/logs
+composer.phar
